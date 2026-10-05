@@ -1,0 +1,47 @@
+name: Build Hey David APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Build APK
+        working-directory: HeyDavid
+        run: gradle --no-daemon assembleDebug
+
+      - name: Verify APK
+        working-directory: HeyDavid
+        run: |
+          ls app/build/outputs/apk/debug/*.apk
+          sha256sum app/build/outputs/apk/debug/*.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: hey-david-10.4.26-debug-apk
+          path: HeyDavid/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 90
+          archive: false
